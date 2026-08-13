@@ -13,7 +13,7 @@ export function InternalNav() {
   }
 
   return (
-    <nav className="mb-6 flex items-center justify-between border-b border-black/10 pb-4 dark:border-white/20">
+    <nav className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-black/10 pb-4 dark:border-white/20">
       <div className="flex gap-4 text-sm font-medium">
         <Link href="/kalender">Kalender</Link>
         <Link href="/mitarbeiter">Mitarbeiter</Link>

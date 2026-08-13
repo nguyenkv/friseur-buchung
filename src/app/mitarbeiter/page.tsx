@@ -15,6 +15,7 @@ export default function MitarbeiterPage() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [editMode, setEditMode] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
@@ -105,14 +106,35 @@ export default function MitarbeiterPage() {
     <main className="mx-auto max-w-2xl p-6">
       <InternalNav />
 
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={openForm}
-          className="rounded-full bg-black px-4 py-1.5 text-sm text-white dark:bg-white dark:text-black"
-        >
-          Mitarbeiter hinzufügen
-        </button>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">{editMode ? "Team bearbeiten" : "Team"}</h1>
+        {editMode ? (
+          <button
+            onClick={() => setEditMode(false)}
+            className="rounded-full border border-black/20 px-4 py-1.5 text-sm dark:border-white/20"
+          >
+            Fertig
+          </button>
+        ) : (
+          <button
+            onClick={() => setEditMode(true)}
+            className="rounded-full border border-black/20 px-4 py-1.5 text-sm dark:border-white/20"
+          >
+            Bearbeiten
+          </button>
+        )}
       </div>
+
+      {editMode && (
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={openForm}
+            className="rounded-full bg-black px-4 py-1.5 text-sm text-white dark:bg-white dark:text-black"
+          >
+            Mitarbeiter hinzufügen
+          </button>
+        </div>
+      )}
 
       <ul className="space-y-2">
         {employees.map((employee) => (
@@ -126,12 +148,14 @@ export default function MitarbeiterPage() {
                 <div className="text-sm text-zinc-500">{employee.title}</div>
               )}
             </div>
-            <button
-              onClick={() => handleDelete(employee)}
-              className="text-sm text-red-600 underline"
-            >
-              Löschen
-            </button>
+            {editMode && (
+              <button
+                onClick={() => handleDelete(employee)}
+                className="text-sm text-red-600 underline"
+              >
+                Löschen
+              </button>
+            )}
           </li>
         ))}
       </ul>
