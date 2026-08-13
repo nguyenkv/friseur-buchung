@@ -48,6 +48,14 @@ function toLocalInputValue(date: Date) {
   )}:${pad(date.getMinutes())}`;
 }
 
+function formatRange(startIso: string, endIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const dateFmt = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeFmt = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" });
+  return `${dateFmt.format(start)}, ${timeFmt.format(start)} – ${timeFmt.format(end)} Uhr`;
+}
+
 export default function KalenderPage() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
@@ -55,7 +63,10 @@ export default function KalenderPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
 
+  const [viewEntry, setViewEntry] = useState<CalendarEntry | null>(null);
+
   const [formOpen, setFormOpen] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [formCategory, setFormCategory] = useState<Category>("kundentermin");
   const [formTitle, setFormTitle] = useState("");
   const [formStart, setFormStart] = useState("");
@@ -115,6 +126,7 @@ export default function KalenderPage() {
     now.setMinutes(0, 0, 0);
     now.setHours(now.getHours() + 1);
     const later = new Date(now.getTime() + 30 * 60 * 1000);
+    setEditingEntryId(null);
     setFormCategory("kundentermin");
     setFormTitle("");
     setFormStart(toLocalInputValue(now));
@@ -124,6 +136,7 @@ export default function KalenderPage() {
   }
 
   function handleSelect(selectInfo: DateSelectArg) {
+    setEditingEntryId(null);
     setFormCategory("kundentermin");
     setFormTitle("");
     setFormStart(toLocalInputValue(selectInfo.start));
@@ -132,15 +145,31 @@ export default function KalenderPage() {
     setFormOpen(true);
   }
 
-  async function handleEventClick(clickInfo: EventClickArg) {
+  function handleEventClick(clickInfo: EventClickArg) {
     const entry = entries.find((e) => e.id === clickInfo.event.id);
     if (!entry) return;
+    setViewEntry(entry);
+  }
+
+  function openEditForm(entry: CalendarEntry) {
+    setEditingEntryId(entry.id);
+    setFormCategory(entry.category);
+    setFormTitle(entry.title ?? "");
+    setFormStart(toLocalInputValue(new Date(entry.start_time)));
+    setFormEnd(toLocalInputValue(new Date(entry.end_time)));
+    setFormError(null);
+    setViewEntry(null);
+    setFormOpen(true);
+  }
+
+  async function handleDeleteEntry(entry: CalendarEntry) {
     const confirmDelete = window.confirm(
-      `"${clickInfo.event.title}" wirklich löschen?`
+      `"${entry.title?.trim() ? entry.title : categoryLabel(entry.category)}" wirklich löschen?`
     );
     if (!confirmDelete) return;
 
     await supabase.from("calendar_entries").delete().eq("id", entry.id);
+    setViewEntry(null);
     if (selectedEmployeeId) loadEntries(selectedEmployeeId);
   }
 
@@ -158,13 +187,17 @@ export default function KalenderPage() {
     setSaving(true);
     setFormError(null);
 
-    const { error } = await supabase.from("calendar_entries").insert({
+    const payload = {
       employee_id: selectedEmployeeId,
       category: formCategory,
       title: formTitle.trim() || null,
       start_time: start.toISOString(),
       end_time: end.toISOString(),
-    });
+    };
+
+    const { error } = editingEntryId
+      ? await supabase.from("calendar_entries").update(payload).eq("id", editingEntryId)
+      : await supabase.from("calendar_entries").insert(payload);
 
     setSaving(false);
 
@@ -174,6 +207,7 @@ export default function KalenderPage() {
     }
 
     setFormOpen(false);
+    setEditingEntryId(null);
     loadEntries(selectedEmployeeId);
   }
 
@@ -241,13 +275,60 @@ export default function KalenderPage() {
         eventClick={handleEventClick}
       />
 
+      {viewEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm space-y-4 rounded-lg bg-white p-6 dark:bg-zinc-900">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: categoryColor(viewEntry.category) }}
+              />
+              <h2 className="text-lg font-semibold">
+                {categoryLabel(viewEntry.category)}
+              </h2>
+            </div>
+
+            {viewEntry.title?.trim() && (
+              <p className="text-sm">{viewEntry.title}</p>
+            )}
+
+            <p className="text-sm text-zinc-500">
+              {formatRange(viewEntry.start_time, viewEntry.end_time)}
+            </p>
+
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button
+                onClick={() => openEditForm(viewEntry)}
+                className="flex-1 rounded bg-black py-2 text-sm text-white dark:bg-white dark:text-black"
+              >
+                Bearbeiten
+              </button>
+              <button
+                onClick={() => handleDeleteEntry(viewEntry)}
+                className="flex-1 rounded border border-red-600 py-2 text-sm text-red-600"
+              >
+                Löschen
+              </button>
+              <button
+                onClick={() => setViewEntry(null)}
+                className="flex-1 rounded border border-black/20 py-2 text-sm dark:border-white/20"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <form
             onSubmit={handleFormSubmit}
             className="w-full max-w-sm space-y-4 rounded-lg bg-white p-6 dark:bg-zinc-900"
           >
-            <h2 className="text-lg font-semibold">Neuer Eintrag</h2>
+            <h2 className="text-lg font-semibold">
+              {editingEntryId ? "Eintrag bearbeiten" : "Neuer Eintrag"}
+            </h2>
 
             <div>
               <label className="mb-1 block text-sm">Kategorie</label>
@@ -303,7 +384,10 @@ export default function KalenderPage() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setFormOpen(false)}
+                onClick={() => {
+                  setFormOpen(false);
+                  setEditingEntryId(null);
+                }}
                 className="flex-1 rounded border border-black/20 py-2 dark:border-white/20"
               >
                 Abbrechen
