@@ -104,16 +104,16 @@ export default function MitarbeiterPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <InternalNav />
+      <InternalNav confirmBeforeLeave={editMode} />
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{editMode ? "Team bearbeiten" : "Team"}</h1>
+        <h1 className="text-2xl font-semibold">Team</h1>
         {editMode ? (
           <button
             onClick={() => setEditMode(false)}
             className="rounded-full border border-black/20 px-4 py-1.5 text-sm dark:border-white/20"
           >
-            Fertig
+            Speichern
           </button>
         ) : (
           <button
