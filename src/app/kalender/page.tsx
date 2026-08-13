@@ -26,6 +26,19 @@ type CalendarEntry = {
   end_time: string;
 };
 
+type BookingService = { name: string; price: number; duration_minutes: number };
+
+type Booking = {
+  customer_email: string;
+  customer_phone: string;
+  services: BookingService[];
+  total_price: number;
+};
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(price);
+}
+
 const CATEGORIES: { value: Category; label: string; color: string }[] = [
   { value: "kundentermin", label: "Kundentermin", color: "#2563eb" },
   { value: "urlaub", label: "Urlaub", color: "#f59e0b" },
@@ -64,6 +77,7 @@ export default function KalenderPage() {
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
 
   const [viewEntry, setViewEntry] = useState<CalendarEntry | null>(null);
+  const [viewBooking, setViewBooking] = useState<Booking | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -145,10 +159,20 @@ export default function KalenderPage() {
     setFormOpen(true);
   }
 
-  function handleEventClick(clickInfo: EventClickArg) {
+  async function handleEventClick(clickInfo: EventClickArg) {
     const entry = entries.find((e) => e.id === clickInfo.event.id);
     if (!entry) return;
     setViewEntry(entry);
+    setViewBooking(null);
+
+    if (entry.category === "kundentermin") {
+      const { data } = await supabase
+        .from("bookings")
+        .select("customer_email, customer_phone, services, total_price")
+        .eq("calendar_entry_id", entry.id)
+        .maybeSingle();
+      setViewBooking(data as Booking | null);
+    }
   }
 
   function openEditForm(entry: CalendarEntry) {
@@ -159,6 +183,7 @@ export default function KalenderPage() {
     setFormEnd(toLocalInputValue(new Date(entry.end_time)));
     setFormError(null);
     setViewEntry(null);
+    setViewBooking(null);
     setFormOpen(true);
   }
 
@@ -170,6 +195,7 @@ export default function KalenderPage() {
 
     await supabase.from("calendar_entries").delete().eq("id", entry.id);
     setViewEntry(null);
+    setViewBooking(null);
     if (selectedEmployeeId) loadEntries(selectedEmployeeId);
   }
 
@@ -296,6 +322,23 @@ export default function KalenderPage() {
               {formatRange(viewEntry.start_time, viewEntry.end_time)}
             </p>
 
+            {viewBooking && (
+              <div className="space-y-1 rounded border border-black/10 p-3 text-sm dark:border-white/20">
+                <p>{viewBooking.customer_email}</p>
+                <p>{viewBooking.customer_phone}</p>
+                <ul className="mt-2 text-zinc-500">
+                  {viewBooking.services.map((s, i) => (
+                    <li key={i}>
+                      {s.name} · {formatPrice(s.price)} · {s.duration_minutes} Min.
+                    </li>
+                  ))}
+                </ul>
+                <p className="pt-1 font-medium">
+                  Gesamt: {formatPrice(viewBooking.total_price)}
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2 pt-2">
               <button
                 onClick={() => openEditForm(viewEntry)}
@@ -310,7 +353,10 @@ export default function KalenderPage() {
                 Löschen
               </button>
               <button
-                onClick={() => setViewEntry(null)}
+                onClick={() => {
+                  setViewEntry(null);
+                  setViewBooking(null);
+                }}
                 className="flex-1 rounded border border-black/20 py-2 text-sm dark:border-white/20"
               >
                 Abbrechen
