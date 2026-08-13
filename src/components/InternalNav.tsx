@@ -4,28 +4,33 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 type Props = {
-  confirmBeforeLeave?: boolean;
+  /**
+   * Wird vor dem Verlassen der Seite aufgerufen (Navigation oder Logout).
+   * Rueckgabewert false bricht das Verlassen ab.
+   */
+  beforeLeave?: () => boolean | Promise<boolean>;
 };
 
-export function InternalNav({ confirmBeforeLeave = false }: Props) {
+export function InternalNav({ beforeLeave }: Props) {
   const router = useRouter();
 
-  function confirmLeave() {
-    if (!confirmBeforeLeave) return true;
-    return window.confirm(
-      "Du bist noch im Bearbeitungsmodus beim Team. Wirklich verlassen?"
-    );
+  async function guarded(action: () => void | Promise<void>) {
+    if (beforeLeave) {
+      const proceed = await beforeLeave();
+      if (!proceed) return;
+    }
+    await action();
   }
 
   function goTo(path: string) {
-    if (!confirmLeave()) return;
-    router.push(path);
+    guarded(() => router.push(path));
   }
 
-  async function handleLogout() {
-    if (!confirmLeave()) return;
-    await supabase.auth.signOut();
-    router.replace("/login");
+  function handleLogout() {
+    guarded(async () => {
+      await supabase.auth.signOut();
+      router.replace("/login");
+    });
   }
 
   return (

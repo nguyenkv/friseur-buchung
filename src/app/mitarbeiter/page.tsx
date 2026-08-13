@@ -16,6 +16,7 @@ export default function MitarbeiterPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [editMode, setEditMode] = useState(false);
+  const [addedEmployeeIds, setAddedEmployeeIds] = useState<string[]>([]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
@@ -83,6 +84,7 @@ export default function MitarbeiterPage() {
     });
     await supabase.from("working_hours").insert(weekdayRows);
 
+    setAddedEmployeeIds((prev) => [...prev, newEmployee.id]);
     setSaving(false);
     setFormOpen(false);
     loadEmployees();
@@ -95,7 +97,36 @@ export default function MitarbeiterPage() {
     if (!confirmDelete) return;
 
     await supabase.from("employees").delete().eq("id", employee.id);
+    setAddedEmployeeIds((prev) => prev.filter((id) => id !== employee.id));
     loadEmployees();
+  }
+
+  function startEditing() {
+    setAddedEmployeeIds([]);
+    setEditMode(true);
+  }
+
+  function finishEditing() {
+    setAddedEmployeeIds([]);
+    setEditMode(false);
+  }
+
+  async function handleBeforeLeave() {
+    if (!editMode) return true;
+
+    const message =
+      addedEmployeeIds.length > 0
+        ? "Du bist noch im Bearbeitungsmodus beim Team. Neu hinzugefügte, noch nicht gespeicherte Mitarbeiter werden verworfen. Wirklich verlassen?"
+        : "Du bist noch im Bearbeitungsmodus beim Team. Wirklich verlassen?";
+    const proceed = window.confirm(message);
+    if (!proceed) return false;
+
+    if (addedEmployeeIds.length > 0) {
+      await supabase.from("employees").delete().in("id", addedEmployeeIds);
+    }
+    setAddedEmployeeIds([]);
+    setEditMode(false);
+    return true;
   }
 
   if (checkingSession) {
@@ -104,20 +135,20 @@ export default function MitarbeiterPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <InternalNav confirmBeforeLeave={editMode} />
+      <InternalNav beforeLeave={handleBeforeLeave} />
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Team</h1>
         {editMode ? (
           <button
-            onClick={() => setEditMode(false)}
+            onClick={finishEditing}
             className="rounded-full border border-black/20 px-4 py-1.5 text-sm dark:border-white/20"
           >
             Speichern
           </button>
         ) : (
           <button
-            onClick={() => setEditMode(true)}
+            onClick={startEditing}
             className="rounded-full border border-black/20 px-4 py-1.5 text-sm dark:border-white/20"
           >
             Bearbeiten
