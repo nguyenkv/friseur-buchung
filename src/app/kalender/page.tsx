@@ -15,7 +15,7 @@ type Employee = {
   name: string;
 };
 
-type Category = "kundentermin" | "arbeitszeit" | "urlaub" | "krankheit" | "sonstiges";
+type Category = "kundentermin" | "urlaub" | "krankheit" | "sonstiges";
 
 type CalendarEntry = {
   id: string;
@@ -28,7 +28,6 @@ type CalendarEntry = {
 
 const CATEGORIES: { value: Category; label: string; color: string }[] = [
   { value: "kundentermin", label: "Kundentermin", color: "#2563eb" },
-  { value: "arbeitszeit", label: "Arbeitszeit", color: "#16a34a" },
   { value: "urlaub", label: "Urlaub", color: "#f59e0b" },
   { value: "krankheit", label: "Krankheit", color: "#dc2626" },
   { value: "sonstiges", label: "Sonstiges / Pause", color: "#6b7280" },

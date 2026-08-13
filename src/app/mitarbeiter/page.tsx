@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { InternalNav } from "@/components/InternalNav";
@@ -15,6 +15,12 @@ export default function MitarbeiterPage() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formTitle, setFormTitle] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -35,6 +41,52 @@ export default function MitarbeiterPage() {
     setEmployees(data ?? []);
   }
 
+  function openForm() {
+    setFormName("");
+    setFormTitle("");
+    setFormError(null);
+    setFormOpen(true);
+  }
+
+  async function handleFormSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!formName.trim()) return;
+
+    setSaving(true);
+    setFormError(null);
+
+    const { data: newEmployee, error } = await supabase
+      .from("employees")
+      .insert({ name: formName.trim(), title: formTitle.trim() || null })
+      .select("id")
+      .single();
+
+    if (error || !newEmployee) {
+      setSaving(false);
+      setFormError("Speichern fehlgeschlagen: " + error?.message);
+      return;
+    }
+
+    // Standard-Arbeitszeiten anlegen: Mo-Fr 9-19, Sa 9-18:30 (wie beim restlichen Team)
+    const weekdayRows = [1, 2, 3, 4, 5].map((weekday) => ({
+      employee_id: newEmployee.id,
+      weekday,
+      start_time: "09:00",
+      end_time: "19:00",
+    }));
+    weekdayRows.push({
+      employee_id: newEmployee.id,
+      weekday: 6,
+      start_time: "09:00",
+      end_time: "18:30",
+    });
+    await supabase.from("working_hours").insert(weekdayRows);
+
+    setSaving(false);
+    setFormOpen(false);
+    loadEmployees();
+  }
+
   if (checkingSession) {
     return null;
   }
@@ -42,7 +94,16 @@ export default function MitarbeiterPage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <InternalNav />
-      <h1 className="mb-6 text-2xl font-semibold">Mitarbeiter</h1>
+
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Mitarbeiter</h1>
+        <button
+          onClick={openForm}
+          className="rounded-full bg-black px-4 py-1.5 text-sm text-white dark:bg-white dark:text-black"
+        >
+          + Mitarbeiter
+        </button>
+      </div>
 
       <ul className="space-y-2">
         {employees.map((employee) => (
@@ -57,6 +118,63 @@ export default function MitarbeiterPage() {
           </li>
         ))}
       </ul>
+
+      {formOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form
+            onSubmit={handleFormSubmit}
+            className="w-full max-w-sm space-y-4 rounded-lg bg-white p-6 dark:bg-zinc-900"
+          >
+            <h2 className="text-lg font-semibold">Neuer Mitarbeiter</h2>
+
+            <div>
+              <label className="mb-1 block text-sm">Name</label>
+              <input
+                type="text"
+                required
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm">Titel / Rolle (optional)</label>
+              <input
+                type="text"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="z. B. Senior Barber"
+                className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+              />
+            </div>
+
+            <p className="text-xs text-zinc-500">
+              Standard-Arbeitszeiten (Mo-Fr 9-19, Sa 9-18:30) werden automatisch
+              angelegt. Änderbar machen wir bei Bedarf später.
+            </p>
+
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setFormOpen(false)}
+                className="flex-1 rounded border border-black/20 py-2 dark:border-white/20"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 rounded bg-black py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
+              >
+                {saving ? "Speichern..." : "Speichern"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
