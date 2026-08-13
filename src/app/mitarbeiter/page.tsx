@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { InternalNav } from "@/components/InternalNav";
 
 type Employee = {
   id: string;
@@ -34,23 +35,14 @@ export default function MitarbeiterPage() {
     setEmployees(data ?? []);
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  }
-
   if (checkingSession) {
     return null;
   }
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Mitarbeiter</h1>
-        <button onClick={handleLogout} className="text-sm underline">
-          Ausloggen
-        </button>
-      </div>
+      <InternalNav />
+      <h1 className="mb-6 text-2xl font-semibold">Mitarbeiter</h1>
 
       <ul className="space-y-2">
         {employees.map((employee) => (
