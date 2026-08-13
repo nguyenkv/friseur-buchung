@@ -87,6 +87,16 @@ export default function MitarbeiterPage() {
     loadEmployees();
   }
 
+  async function handleDelete(employee: Employee) {
+    const confirmDelete = window.confirm(
+      `"${employee.name}" wirklich löschen? Alle Arbeitszeiten und Kalendereinträge dieser Person werden ebenfalls gelöscht.`
+    );
+    if (!confirmDelete) return;
+
+    await supabase.from("employees").delete().eq("id", employee.id);
+    loadEmployees();
+  }
+
   if (checkingSession) {
     return null;
   }
@@ -95,13 +105,12 @@ export default function MitarbeiterPage() {
     <main className="mx-auto max-w-2xl p-6">
       <InternalNav />
 
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Mitarbeiter</h1>
+      <div className="mb-6 flex justify-end">
         <button
           onClick={openForm}
           className="rounded-full bg-black px-4 py-1.5 text-sm text-white dark:bg-white dark:text-black"
         >
-          + Mitarbeiter
+          Mitarbeiter hinzufügen
         </button>
       </div>
 
@@ -109,12 +118,20 @@ export default function MitarbeiterPage() {
         {employees.map((employee) => (
           <li
             key={employee.id}
-            className="rounded border border-black/10 p-3 dark:border-white/20"
+            className="flex items-center justify-between rounded border border-black/10 p-3 dark:border-white/20"
           >
-            <div className="font-medium">{employee.name}</div>
-            {employee.title && (
-              <div className="text-sm text-zinc-500">{employee.title}</div>
-            )}
+            <div>
+              <div className="font-medium">{employee.name}</div>
+              {employee.title && (
+                <div className="text-sm text-zinc-500">{employee.title}</div>
+              )}
+            </div>
+            <button
+              onClick={() => handleDelete(employee)}
+              className="text-sm text-red-600 underline"
+            >
+              Löschen
+            </button>
           </li>
         ))}
       </ul>
