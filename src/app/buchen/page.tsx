@@ -133,19 +133,20 @@ export default function BuchenPage() {
     const startTime = new Date(selectedSlot);
     const endTime = new Date(startTime.getTime() + totalDuration * 60 * 1000);
 
-    const { data: entry, error: entryError } = await supabase
-      .from("calendar_entries")
-      .insert({
-        employee_id: targetEmployeeId,
-        category: "kundentermin",
-        title: customerName.trim(),
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-      })
-      .select("id")
-      .single();
+    // ID wird hier erzeugt (statt sie nach dem Speichern zurückzulesen), weil Kunden
+    // aus Datenschutzgruenden keine Kalendereintraege lesen duerfen - auch nicht ihren eigenen.
+    const entryId = crypto.randomUUID();
 
-    if (entryError || !entry) {
+    const { error: entryError } = await supabase.from("calendar_entries").insert({
+      id: entryId,
+      employee_id: targetEmployeeId,
+      category: "kundentermin",
+      title: customerName.trim(),
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+    });
+
+    if (entryError) {
       setSubmitting(false);
       setSubmitError(
         "Leider ist dieser Termin gerade nicht mehr verfügbar. Bitte wähle einen anderen Termin."
@@ -154,7 +155,7 @@ export default function BuchenPage() {
     }
 
     const { error: bookingError } = await supabase.from("bookings").insert({
-      calendar_entry_id: entry.id,
+      calendar_entry_id: entryId,
       customer_name: customerName.trim(),
       customer_email: customerEmail.trim(),
       customer_phone: customerPhone.trim(),
