@@ -22,6 +22,14 @@ function todayIso() {
   return toIsoDate(new Date());
 }
 
+function skipSunday(iso: string) {
+  const date = new Date(iso + "T00:00:00");
+  if (date.getDay() === 0) {
+    date.setDate(date.getDate() + 1);
+  }
+  return toIsoDate(date);
+}
+
 export default function BuchenPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -30,7 +38,7 @@ export default function BuchenPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(ANY_EMPLOYEE);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
-  const [selectedDate, setSelectedDate] = useState(todayIso());
+  const [selectedDate, setSelectedDate] = useState(() => skipSunday(todayIso()));
   const [slots, setSlots] = useState<string[]>([]);
   const [slotEmployeeMap, setSlotEmployeeMap] = useState<Record<string, string>>({});
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -300,9 +308,10 @@ export default function BuchenPage() {
               min={todayIso()}
               max={maxDate ?? undefined}
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              onChange={(e) => setSelectedDate(skipSunday(e.target.value))}
               className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
             />
+            <p className="mt-1 text-xs text-zinc-500">Sonntags haben wir geschlossen.</p>
           </div>
 
           {loadingSlots && <p className="text-sm text-zinc-500">Lade freie Termine...</p>}
