@@ -161,12 +161,7 @@ export default function MitarbeiterPage() {
       <InternalNav beforeLeave={handleBeforeLeave} />
 
       <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-semibold">Team</h1>
-          <Link href="/einstellungen" className="text-sm underline">
-            Einstellungen
-          </Link>
-        </div>
+        <h1 className="text-2xl font-semibold">Team</h1>
         {editMode ? (
           <button
             onClick={finishEditing}
@@ -251,12 +246,12 @@ export default function MitarbeiterPage() {
 
             <p className="text-xs text-zinc-500">
               {defaultHours
-                ? `Standard-Arbeitszeiten (Mo-Fr ${defaultHours.default_weekday_start}-${defaultHours.default_weekday_end}, Sa ${defaultHours.default_saturday_start}-${defaultHours.default_saturday_end}) werden automatisch angelegt. In den `
-                : "Standard-Arbeitszeiten werden automatisch angelegt. In den "}
+                ? `Die Arbeitszeiten (Mo-Fr ${defaultHours.default_weekday_start}-${defaultHours.default_weekday_end}, Sa ${defaultHours.default_saturday_start}-${defaultHours.default_saturday_end}) gelten für alle Mitarbeiter gleich. In den `
+                : "Die Arbeitszeiten gelten für alle Mitarbeiter gleich. In den "}
               <Link href="/einstellungen" className="underline">
                 Einstellungen
               </Link>{" "}
-              änderbar.
+              für alle änderbar.
             </p>
 
             {formError && <p className="text-sm text-red-600">{formError}</p>}

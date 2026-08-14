@@ -59,13 +59,37 @@ export default function EinstellungenPage() {
       })
       .eq("id", settings.id);
 
-    setSaving(false);
-
     if (error) {
+      setSaving(false);
       setError("Speichern fehlgeschlagen: " + error.message);
       return;
     }
 
+    // Arbeitszeiten gelten fuer alle Mitarbeiter gleich: bestehende Zeiten
+    // durch die neuen Werte ersetzen, nicht nur fuer kuenftige neue Mitarbeiter.
+    const { data: allEmployees } = await supabase.from("employees").select("id");
+    if (allEmployees && allEmployees.length > 0) {
+      await supabase.from("working_hours").delete().lte("weekday", 6);
+
+      const rows = allEmployees.flatMap((employee) => [
+        ...[1, 2, 3, 4, 5].map((weekday) => ({
+          employee_id: employee.id,
+          weekday,
+          start_time: settings.default_weekday_start,
+          end_time: settings.default_weekday_end,
+        })),
+        {
+          employee_id: employee.id,
+          weekday: 6,
+          start_time: settings.default_saturday_start,
+          end_time: settings.default_saturday_end,
+        },
+      ]);
+
+      await supabase.from("working_hours").insert(rows);
+    }
+
+    setSaving(false);
     setSaved(true);
   }
 
@@ -116,10 +140,10 @@ export default function EinstellungenPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-medium">Standard-Arbeitszeiten für neue Mitarbeiter</h2>
+          <h2 className="font-medium">Arbeitszeiten (für alle Mitarbeiter)</h2>
           <p className="text-xs text-zinc-500">
-            Gelten für neu hinzugefügte Mitarbeiter (Mo-Fr und Sa). Bereits angelegte
-            Mitarbeiter sind davon nicht betroffen.
+            Gelten einheitlich für das gesamte Team. Beim Speichern werden die
+            Arbeitszeiten aller Mitarbeiter auf diese Werte gesetzt.
           </p>
 
           <div className="grid grid-cols-2 gap-3">

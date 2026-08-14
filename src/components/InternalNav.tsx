@@ -45,6 +45,9 @@ export function InternalNav({ beforeLeave }: Props) {
         <button onClick={() => goTo("/leistungen")} className="bg-transparent p-0">
           Leistungen
         </button>
+        <button onClick={() => goTo("/einstellungen")} className="bg-transparent p-0">
+          Einstellungen
+        </button>
       </div>
       <button onClick={handleLogout} className="bg-transparent p-0 text-sm underline">
         Ausloggen
