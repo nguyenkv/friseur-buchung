@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { InternalNav } from "@/components/InternalNav";
 
@@ -11,10 +12,18 @@ type Employee = {
   title: string | null;
 };
 
+type DefaultHours = {
+  default_weekday_start: string;
+  default_weekday_end: string;
+  default_saturday_start: string;
+  default_saturday_end: string;
+};
+
 export default function MitarbeiterPage() {
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [defaultHours, setDefaultHours] = useState<DefaultHours | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [addedEmployeeIds, setAddedEmployeeIds] = useState<string[]>([]);
 
@@ -32,6 +41,7 @@ export default function MitarbeiterPage() {
       }
       setCheckingSession(false);
       loadEmployees();
+      loadDefaultHours();
     });
   }, [router]);
 
@@ -41,6 +51,17 @@ export default function MitarbeiterPage() {
       .select("id, name, title")
       .order("name");
     setEmployees(data ?? []);
+  }
+
+  async function loadDefaultHours() {
+    const { data } = await supabase
+      .from("settings")
+      .select(
+        "default_weekday_start, default_weekday_end, default_saturday_start, default_saturday_end"
+      )
+      .limit(1)
+      .maybeSingle();
+    setDefaultHours(data);
   }
 
   function openForm() {
@@ -69,20 +90,22 @@ export default function MitarbeiterPage() {
       return;
     }
 
-    // Standard-Arbeitszeiten anlegen: Mo-Fr 9-19, Sa 9-18:30 (wie beim restlichen Team)
-    const weekdayRows = [1, 2, 3, 4, 5].map((weekday) => ({
-      employee_id: newEmployee.id,
-      weekday,
-      start_time: "09:00",
-      end_time: "19:00",
-    }));
-    weekdayRows.push({
-      employee_id: newEmployee.id,
-      weekday: 6,
-      start_time: "09:00",
-      end_time: "18:30",
-    });
-    await supabase.from("working_hours").insert(weekdayRows);
+    // Standard-Arbeitszeiten anlegen (aus den Einstellungen)
+    if (defaultHours) {
+      const weekdayRows = [1, 2, 3, 4, 5].map((weekday) => ({
+        employee_id: newEmployee.id,
+        weekday,
+        start_time: defaultHours.default_weekday_start,
+        end_time: defaultHours.default_weekday_end,
+      }));
+      weekdayRows.push({
+        employee_id: newEmployee.id,
+        weekday: 6,
+        start_time: defaultHours.default_saturday_start,
+        end_time: defaultHours.default_saturday_end,
+      });
+      await supabase.from("working_hours").insert(weekdayRows);
+    }
 
     setAddedEmployeeIds((prev) => [...prev, newEmployee.id]);
     setSaving(false);
@@ -138,7 +161,12 @@ export default function MitarbeiterPage() {
       <InternalNav beforeLeave={handleBeforeLeave} />
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Team</h1>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-semibold">Team</h1>
+          <Link href="/einstellungen" className="text-sm underline">
+            Einstellungen
+          </Link>
+        </div>
         {editMode ? (
           <button
             onClick={finishEditing}
@@ -222,8 +250,13 @@ export default function MitarbeiterPage() {
             </div>
 
             <p className="text-xs text-zinc-500">
-              Standard-Arbeitszeiten (Mo-Fr 9-19, Sa 9-18:30) werden automatisch
-              angelegt. Änderbar machen wir bei Bedarf später.
+              {defaultHours
+                ? `Standard-Arbeitszeiten (Mo-Fr ${defaultHours.default_weekday_start}-${defaultHours.default_weekday_end}, Sa ${defaultHours.default_saturday_start}-${defaultHours.default_saturday_end}) werden automatisch angelegt. In den `
+                : "Standard-Arbeitszeiten werden automatisch angelegt. In den "}
+              <Link href="/einstellungen" className="underline">
+                Einstellungen
+              </Link>{" "}
+              änderbar.
             </p>
 
             {formError && <p className="text-sm text-red-600">{formError}</p>}

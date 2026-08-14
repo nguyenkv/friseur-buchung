@@ -13,10 +13,13 @@ function formatPrice(price: number) {
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(price);
 }
 
-function todayIso() {
-  const now = new Date();
+function toIsoDate(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function todayIso() {
+  return toIsoDate(new Date());
 }
 
 export default function BuchenPage() {
@@ -42,6 +45,8 @@ export default function BuchenPage() {
 
   const [confirmedEmployeeName, setConfirmedEmployeeName] = useState("");
 
+  const [maxDate, setMaxDate] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.from("employees").select("id, name").order("name").then(({ data }) => {
       setEmployees(data ?? []);
@@ -52,6 +57,18 @@ export default function BuchenPage() {
       .order("name")
       .then(({ data }) => {
         setServices(data ?? []);
+      });
+    supabase
+      .from("settings")
+      .select("booking_horizon_weeks")
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const max = new Date();
+          max.setDate(max.getDate() + data.booking_horizon_weeks * 7);
+          setMaxDate(toIsoDate(max));
+        }
       });
   }, []);
 
@@ -281,6 +298,7 @@ export default function BuchenPage() {
             <input
               type="date"
               min={todayIso()}
+              max={maxDate ?? undefined}
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
