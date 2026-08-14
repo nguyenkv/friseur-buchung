@@ -6,7 +6,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import deLocale from "@fullcalendar/core/locales/de";
-import type { DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import type { CalendarApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { supabase } from "@/lib/supabase";
 import { InternalNav } from "@/components/InternalNav";
 
@@ -245,13 +245,13 @@ export default function KalenderPage() {
     <main className="mx-auto max-w-5xl p-6">
       <InternalNav />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {employees.map((employee) => (
             <button
               key={employee.id}
               onClick={() => setSelectedEmployeeId(employee.id)}
-              className={`rounded-full px-4 py-1.5 text-sm ${
+              className={`rounded-full px-2.5 py-1 text-xs sm:px-4 sm:py-1.5 sm:text-sm ${
                 selectedEmployeeId === employee.id
                   ? "bg-black text-white dark:bg-white dark:text-black"
                   : "border border-black/20 dark:border-white/20"
@@ -264,7 +264,7 @@ export default function KalenderPage() {
 
         <button
           onClick={openBlankForm}
-          className="rounded-full bg-black px-4 py-1.5 text-sm text-white dark:bg-white dark:text-black"
+          className="rounded-full bg-black px-2.5 py-1 text-xs text-white sm:px-4 sm:py-1.5 sm:text-sm dark:bg-white dark:text-black"
         >
           + Eintrag
         </button>
@@ -284,7 +284,11 @@ export default function KalenderPage() {
 
       <FullCalendar
         plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
+        initialView={
+          typeof window !== "undefined" && window.innerWidth < 640
+            ? "timeGridDay"
+            : "timeGridWeek"
+        }
         headerToolbar={{
           left: "prev,next today",
           center: "title",
@@ -299,6 +303,16 @@ export default function KalenderPage() {
         select={handleSelect}
         events={events}
         eventClick={handleEventClick}
+        windowResize={(arg) => {
+          const api: CalendarApi = arg.view.calendar;
+          const shouldBeDay = window.innerWidth < 640;
+          const isDay = api.view.type === "timeGridDay";
+          if (shouldBeDay && !isDay) {
+            api.changeView("timeGridDay");
+          } else if (!shouldBeDay && isDay) {
+            api.changeView("timeGridWeek");
+          }
+        }}
       />
 
       {viewEntry && (
