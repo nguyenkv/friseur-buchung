@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Employee = { id: string; name: string };
@@ -35,6 +36,7 @@ export default function BuchenPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -374,6 +376,23 @@ export default function BuchenPage() {
             Zahlung erfolgt vor Ort (Barzahlung, EC-Karte, Kreditkarte möglich).
           </p>
 
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              required
+              checked={privacyAccepted}
+              onChange={(e) => setPrivacyAccepted(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              Ich habe die{" "}
+              <Link href="/datenschutz" target="_blank" className="underline">
+                Datenschutzerklärung
+              </Link>{" "}
+              zur Kenntnis genommen.
+            </span>
+          </label>
+
           {submitError && <p className="text-sm text-red-600">{submitError}</p>}
 
           <div className="flex gap-2">
@@ -386,7 +405,7 @@ export default function BuchenPage() {
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !privacyAccepted}
               className="flex-1 rounded bg-black py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
             >
               {submitting ? "Wird gebucht..." : "Termin buchen"}
@@ -424,6 +443,15 @@ export default function BuchenPage() {
           </p>
         </section>
       )}
+
+      <footer className="mt-10 flex gap-4 text-xs text-zinc-500">
+        <Link href="/impressum" className="underline">
+          Impressum
+        </Link>
+        <Link href="/datenschutz" className="underline">
+          Datenschutzerklärung
+        </Link>
+      </footer>
     </main>
   );
 }
