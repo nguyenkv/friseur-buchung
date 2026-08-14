@@ -418,6 +418,10 @@ export default function BuchenPage() {
           <p className="text-sm text-zinc-500">
             Zahlung erfolgt vor Ort (Barzahlung, EC-Karte, Kreditkarte möglich).
           </p>
+          <p className="rounded border border-black/10 p-3 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+            Du erhältst aktuell keine Bestätigungs-E-Mail – bitte mache einen
+            Screenshot dieser Seite als Nachweis für deinen Termin.
+          </p>
         </section>
       )}
     </main>
