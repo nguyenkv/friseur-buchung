@@ -6,7 +6,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import deLocale from "@fullcalendar/core/locales/de";
-import type { CalendarApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import type { DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { supabase } from "@/lib/supabase";
 import { InternalNav } from "@/components/InternalNav";
 
@@ -304,16 +304,6 @@ export default function KalenderPage() {
         select={handleSelect}
         events={events}
         eventClick={handleEventClick}
-        windowResize={(arg) => {
-          const api: CalendarApi = arg.view.calendar;
-          const shouldBeDay = window.innerWidth < 640;
-          const isDay = api.view.type === "timeGridDay";
-          if (shouldBeDay && !isDay) {
-            api.changeView("timeGridDay");
-          } else if (!shouldBeDay && isDay) {
-            api.changeView("timeGridWeek");
-          }
-        }}
       />
 
       {viewEntry && (
