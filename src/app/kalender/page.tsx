@@ -296,6 +296,7 @@ export default function KalenderPage() {
         }}
         locale={deLocale}
         firstDay={1}
+        allDaySlot={false}
         slotMinTime="07:00:00"
         slotMaxTime="21:00:00"
         height="auto"
