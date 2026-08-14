@@ -189,30 +189,30 @@ export default function LeistungenPage() {
         {services.map((service) => (
           <li
             key={service.id}
-            className="flex items-center justify-between rounded border border-black/10 p-3 dark:border-white/20"
+            className="rounded border border-black/10 p-3 dark:border-white/20"
           >
-            <div>
-              <div className="font-medium">{service.name}</div>
+            <div className="font-medium">{service.name}</div>
+            <div className="flex items-center justify-between">
               <div className="text-sm text-zinc-500">
                 {formatPrice(service.price)} · {service.duration_minutes} Min.
               </div>
+              {editMode && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => openEditForm(service)}
+                    className="text-sm underline"
+                  >
+                    Bearbeiten
+                  </button>
+                  <button
+                    onClick={() => handleDelete(service)}
+                    className="text-sm text-red-600 underline"
+                  >
+                    Löschen
+                  </button>
+                </div>
+              )}
             </div>
-            {editMode && (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => openEditForm(service)}
-                  className="text-sm underline"
-                >
-                  Bearbeiten
-                </button>
-                <button
-                  onClick={() => handleDelete(service)}
-                  className="text-sm text-red-600 underline"
-                >
-                  Löschen
-                </button>
-              </div>
-            )}
           </li>
         ))}
       </ul>
