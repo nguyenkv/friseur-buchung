@@ -191,7 +191,7 @@ export default function LeistungenPage() {
             key={service.id}
             className="rounded border border-black/10 p-3 dark:border-white/20"
           >
-            <div className="font-medium">{service.name}</div>
+            <div className="mb-1 font-medium">{service.name}</div>
             <div className="flex items-center justify-between">
               <div className="text-sm text-zinc-500">
                 {formatPrice(service.price)} · {service.duration_minutes} Min.
