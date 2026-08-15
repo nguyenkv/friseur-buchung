@@ -35,7 +35,7 @@ export function InternalNav({ beforeLeave }: Props) {
   }
 
   return (
-    <nav className="mb-8 grid grid-cols-2 items-center gap-x-4 gap-y-2 border-b border-black/10 pb-4 sm:grid-cols-[1fr_auto_1fr] dark:border-white/20">
+    <nav className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-black/10 pb-4 sm:grid sm:grid-cols-[1fr_auto_1fr] dark:border-white/20">
       <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
         <button onClick={() => goTo("/kalender")} className="bg-transparent p-0">
           Kalender
