@@ -88,6 +88,9 @@ export default function KalenderPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [slotMinTime, setSlotMinTime] = useState("09:00:00");
+  const [slotMaxTime, setSlotMaxTime] = useState("19:00:00");
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -96,8 +99,26 @@ export default function KalenderPage() {
       }
       setCheckingSession(false);
       loadEmployees();
+      loadOpeningHours();
     });
   }, [router]);
+
+  async function loadOpeningHours() {
+    const { data } = await supabase
+      .from("settings")
+      .select(
+        "default_weekday_start, default_weekday_end, default_saturday_start, default_saturday_end"
+      )
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      const starts = [data.default_weekday_start, data.default_saturday_start].sort();
+      const ends = [data.default_weekday_end, data.default_saturday_end].sort();
+      setSlotMinTime(starts[0]);
+      setSlotMaxTime(ends[ends.length - 1]);
+    }
+  }
 
   async function loadEmployees() {
     const { data } = await supabase.from("employees").select("id, name").order("name");
@@ -298,8 +319,8 @@ export default function KalenderPage() {
         firstDay={1}
         hiddenDays={[0]}
         allDaySlot={false}
-        slotMinTime="07:00:00"
-        slotMaxTime="21:00:00"
+        slotMinTime={slotMinTime}
+        slotMaxTime={slotMaxTime}
         height="auto"
         selectable
         select={handleSelect}
