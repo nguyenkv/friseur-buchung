@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -34,8 +35,8 @@ export function InternalNav({ beforeLeave }: Props) {
   }
 
   return (
-    <nav className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-black/10 pb-4 dark:border-white/20">
-      <div className="flex items-center gap-4 text-sm font-medium">
+    <nav className="mb-8 grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-2 border-b border-black/10 pb-4 dark:border-white/20">
+      <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
         <button onClick={() => goTo("/kalender")} className="bg-transparent p-0">
           Kalender
         </button>
@@ -66,7 +67,19 @@ export function InternalNav({ beforeLeave }: Props) {
           </svg>
         </button>
       </div>
-      <button onClick={handleLogout} className="bg-transparent p-0 text-sm underline">
+
+      <Image
+        src="/images/logo-hirsch-black.png"
+        alt="Barber Hirsch"
+        width={630}
+        height={547}
+        className="h-8 w-auto justify-self-center dark:invert"
+      />
+
+      <button
+        onClick={handleLogout}
+        className="justify-self-end bg-transparent p-0 text-sm underline"
+      >
         Ausloggen
       </button>
     </nav>
