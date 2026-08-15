@@ -25,9 +25,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* FullCalendar: modernere, dezente Markierung fuer den heutigen Tag statt des Standard-Gelbs */
+/* FullCalendar: neutrales Grau fuer den heutigen Tag statt des Standard-Gelbs -
+   konkurriert nicht mit den Kategorie-Farben (z.B. Kundentermin-Blau) */
 .fc {
-  --fc-today-bg-color: rgba(37, 99, 235, 0.06);
+  --fc-today-bg-color: rgba(0, 0, 0, 0.045);
+}
+
+@media (prefers-color-scheme: dark) {
+  .fc {
+    --fc-today-bg-color: rgba(255, 255, 255, 0.07);
+  }
 }
 
 /* FullCalendar: Kopfzeile darf umbrechen statt zu ueberlappen, auf kleinen Bildschirmen kompakter */
