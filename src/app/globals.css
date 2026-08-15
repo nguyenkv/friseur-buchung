@@ -45,6 +45,59 @@ body {
   font-size: 0.85rem;
 }
 
+/* FullCalendar: Buttons an das Schwarz/Weiss-Auswahlmuster der App angleichen
+   (z.B. Mitarbeiter-Reiter) statt des Standard-Blaugrau */
+.fc .fc-button-primary {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000;
+}
+
+.fc .fc-button-primary:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000;
+}
+
+.fc .fc-button-primary:disabled {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.35);
+  opacity: 1;
+}
+
+.fc .fc-button-primary.fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fc .fc-button-primary {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .fc .fc-button-primary:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .fc .fc-button-primary:disabled {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .fc .fc-button-primary.fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active {
+    background-color: #fff;
+    border-color: #fff;
+    color: #000;
+  }
+}
+
 @media (max-width: 480px) {
   .fc .fc-toolbar-chunk {
     display: flex;
