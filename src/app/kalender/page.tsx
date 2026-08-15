@@ -172,8 +172,8 @@ export default function KalenderPage() {
         title: entry.title?.trim() ? entry.title : categoryLabel(entry.category),
         start: entry.start_time,
         end: entry.end_time,
-        backgroundColor: hexToRgba(categoryColor(entry.category), 0.28),
-        borderColor: hexToRgba(categoryColor(entry.category), 0.6),
+        backgroundColor: hexToRgba(categoryColor(entry.category), 0.4),
+        borderColor: hexToRgba(categoryColor(entry.category), 0.75),
         textColor: categoryColor(entry.category),
       })),
     [entries]
