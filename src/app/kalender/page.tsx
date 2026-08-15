@@ -366,6 +366,7 @@ export default function KalenderPage() {
         allDaySlot={false}
         slotMinTime={slotMinTime}
         slotMaxTime={slotMaxTime}
+        nowIndicator
         height="auto"
         selectable
         select={handleSelect}

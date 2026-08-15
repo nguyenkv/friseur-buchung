@@ -25,10 +25,20 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* FullCalendar: neutrales Grau fuer den heutigen Tag statt des Standard-Gelbs -
-   konkurriert nicht mit den Kategorie-Farben (z.B. Kundentermin-Blau) */
+/* FullCalendar: "heute" nicht mehr flaechig einfaerben (wirkte wie "ausgegraut"),
+   stattdessen nur das Datum in der Kopfzeile hervorheben (Google-Calendar-Stil)
+   und die "Jetzt"-Linie nutzen (siehe nowIndicator-Prop) */
 .fc {
-  --fc-today-bg-color: rgba(0, 0, 0, 0.045);
+  --fc-today-bg-color: transparent;
+}
+
+.fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  display: inline-block;
+  border-radius: 9999px;
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
 }
 
 /* FullCalendar: einheitliche, neutrale Textfarbe in Eintraegen statt farbigem Text
@@ -39,8 +49,12 @@ body {
 
 @media (prefers-color-scheme: dark) {
   .fc {
-    --fc-today-bg-color: rgba(255, 255, 255, 0.07);
     --fc-event-text-color: #f4f4f5;
+  }
+
+  .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+    background-color: #fff;
+    color: #000;
   }
 }
 
