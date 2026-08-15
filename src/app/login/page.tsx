@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <Image
-        src="/images/logo-hirsch.jpg"
+        src="/images/logo-hirsch.png"
         alt="Barber Hirsch Logo"
         width={112}
         height={112}
