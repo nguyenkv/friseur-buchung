@@ -54,6 +54,17 @@ function categoryColor(value: Category) {
   return CATEGORIES.find((c) => c.value === value)?.color ?? "#6b7280";
 }
 
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function isAllDayCategory(category: Category) {
+  return category === "urlaub" || category === "krankheit";
+}
+
 function toLocalInputValue(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
@@ -67,6 +78,17 @@ function formatRange(startIso: string, endIso: string) {
   const dateFmt = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
   const timeFmt = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" });
   return `${dateFmt.format(start)}, ${timeFmt.format(start)} – ${timeFmt.format(end)} Uhr`;
+}
+
+function formatDateRange(startIso: string, endIsoExclusive: string) {
+  const start = new Date(startIso);
+  const lastDay = new Date(endIsoExclusive);
+  lastDay.setDate(lastDay.getDate() - 1);
+  const dateFmt = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  if (start.toDateString() === lastDay.toDateString()) {
+    return dateFmt.format(start);
+  }
+  return `${dateFmt.format(start)} – ${dateFmt.format(lastDay)}`;
 }
 
 export default function KalenderPage() {
@@ -150,8 +172,9 @@ export default function KalenderPage() {
         title: entry.title?.trim() ? entry.title : categoryLabel(entry.category),
         start: entry.start_time,
         end: entry.end_time,
-        backgroundColor: categoryColor(entry.category),
-        borderColor: categoryColor(entry.category),
+        backgroundColor: hexToRgba(categoryColor(entry.category), 0.16),
+        borderColor: hexToRgba(categoryColor(entry.category), 0.5),
+        textColor: categoryColor(entry.category),
       })),
     [entries]
   );
@@ -201,7 +224,17 @@ export default function KalenderPage() {
     setFormCategory(entry.category);
     setFormTitle(entry.title ?? "");
     setFormStart(toLocalInputValue(new Date(entry.start_time)));
-    setFormEnd(toLocalInputValue(new Date(entry.end_time)));
+
+    if (isAllDayCategory(entry.category)) {
+      // gespeichertes Ende ist exklusiv (Mitternacht des Folgetages) - fuer die
+      // Anzeige den tatsaechlich letzten Tag zeigen
+      const lastDay = new Date(entry.end_time);
+      lastDay.setDate(lastDay.getDate() - 1);
+      setFormEnd(toLocalInputValue(lastDay));
+    } else {
+      setFormEnd(toLocalInputValue(new Date(entry.end_time)));
+    }
+
     setFormError(null);
     setViewEntry(null);
     setViewBooking(null);
@@ -224,11 +257,24 @@ export default function KalenderPage() {
     e.preventDefault();
     if (!selectedEmployeeId) return;
 
-    const start = new Date(formStart);
-    const end = new Date(formEnd);
-    if (end <= start) {
-      setFormError("Das Ende muss nach dem Start liegen.");
-      return;
+    let start: Date;
+    let end: Date;
+
+    if (isAllDayCategory(formCategory)) {
+      start = new Date(`${formStart.slice(0, 10)}T00:00:00`);
+      end = new Date(`${formEnd.slice(0, 10)}T00:00:00`);
+      end.setDate(end.getDate() + 1); // exklusiv: Mitternacht nach dem letzten Tag
+      if (end <= start) {
+        setFormError("Das Enddatum darf nicht vor dem Startdatum liegen.");
+        return;
+      }
+    } else {
+      start = new Date(formStart);
+      end = new Date(formEnd);
+      if (end <= start) {
+        setFormError("Das Ende muss nach dem Start liegen.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -346,7 +392,9 @@ export default function KalenderPage() {
             )}
 
             <p className="text-sm text-zinc-500">
-              {formatRange(viewEntry.start_time, viewEntry.end_time)}
+              {isAllDayCategory(viewEntry.category)
+                ? formatDateRange(viewEntry.start_time, viewEntry.end_time)
+                : formatRange(viewEntry.start_time, viewEntry.end_time)}
             </p>
 
             {viewBooking && (
@@ -445,23 +493,35 @@ export default function KalenderPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm">Start</label>
+              <label className="mb-1 block text-sm">
+                {isAllDayCategory(formCategory) ? "Von" : "Start"}
+              </label>
               <input
-                type="datetime-local"
+                type={isAllDayCategory(formCategory) ? "date" : "datetime-local"}
                 required
-                value={formStart}
-                onChange={(e) => setFormStart(e.target.value)}
+                value={isAllDayCategory(formCategory) ? formStart.slice(0, 10) : formStart}
+                onChange={(e) =>
+                  setFormStart(
+                    isAllDayCategory(formCategory) ? `${e.target.value}T00:00` : e.target.value
+                  )
+                }
                 className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm">Ende</label>
+              <label className="mb-1 block text-sm">
+                {isAllDayCategory(formCategory) ? "Bis" : "Ende"}
+              </label>
               <input
-                type="datetime-local"
+                type={isAllDayCategory(formCategory) ? "date" : "datetime-local"}
                 required
-                value={formEnd}
-                onChange={(e) => setFormEnd(e.target.value)}
+                value={isAllDayCategory(formCategory) ? formEnd.slice(0, 10) : formEnd}
+                onChange={(e) =>
+                  setFormEnd(
+                    isAllDayCategory(formCategory) ? `${e.target.value}T00:00` : e.target.value
+                  )
+                }
                 className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
               />
             </div>

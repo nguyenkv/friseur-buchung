@@ -25,6 +25,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* FullCalendar: modernere, dezente Markierung fuer den heutigen Tag statt des Standard-Gelbs */
+.fc {
+  --fc-today-bg-color: rgba(37, 99, 235, 0.06);
+}
+
 /* FullCalendar: Kopfzeile darf umbrechen statt zu ueberlappen, auf kleinen Bildschirmen kompakter */
 .fc .fc-toolbar {
   flex-wrap: wrap;
