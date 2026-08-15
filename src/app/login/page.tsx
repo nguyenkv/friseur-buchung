@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -29,7 +30,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <Image
+        src="/images/logo-hirsch.jpg"
+        alt="Barber Hirsch Logo"
+        width={112}
+        height={112}
+        className="mb-6 h-28 w-28 rounded-full object-cover"
+        priority
+      />
+
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm space-y-4 rounded-lg border border-black/10 p-6 dark:border-white/20"
