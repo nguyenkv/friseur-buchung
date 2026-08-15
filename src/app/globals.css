@@ -31,9 +31,16 @@ body {
   --fc-today-bg-color: rgba(0, 0, 0, 0.045);
 }
 
+/* FullCalendar: einheitliche, neutrale Textfarbe in Eintraegen statt farbigem Text
+   je Kategorie - besser lesbar, Kategorie bleibt ueber Hintergrund/Rand erkennbar */
+.fc {
+  --fc-event-text-color: #111827;
+}
+
 @media (prefers-color-scheme: dark) {
   .fc {
     --fc-today-bg-color: rgba(255, 255, 255, 0.07);
+    --fc-event-text-color: #f4f4f5;
   }
 }
 

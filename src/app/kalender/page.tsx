@@ -174,7 +174,6 @@ export default function KalenderPage() {
         end: entry.end_time,
         backgroundColor: hexToRgba(categoryColor(entry.category), 0.4),
         borderColor: hexToRgba(categoryColor(entry.category), 0.75),
-        textColor: categoryColor(entry.category),
       })),
     [entries]
   );
