@@ -256,6 +256,11 @@ export default function KalenderPage() {
     e.preventDefault();
     if (!selectedEmployeeId) return;
 
+    if (formCategory === "kundentermin" && !formTitle.trim()) {
+      setFormError("Bitte einen Kundennamen eingeben.");
+      return;
+    }
+
     let start: Date;
     let end: Date;
 
@@ -486,6 +491,7 @@ export default function KalenderPage() {
               </label>
               <input
                 type="text"
+                required={formCategory === "kundentermin"}
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
                 className="w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
